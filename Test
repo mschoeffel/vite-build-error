@@ -1,0 +1,161 @@
+Index: frontend/miwo-frontend/src/components/Filter/FilterApartmentDialog.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/miwo-frontend/src/components/Filter/FilterApartmentDialog.vue b/frontend/miwo-frontend/src/components/Filter/FilterApartmentDialog.vue
+--- a/frontend/miwo-frontend/src/components/Filter/FilterApartmentDialog.vue	(revision 3a99c2f1e26632f2513657f08ddf23aac9096fed)
++++ b/frontend/miwo-frontend/src/components/Filter/FilterApartmentDialog.vue	(date 1626427072017)
+@@ -76,7 +76,7 @@
+                 </DialogTitle>
+                 <div class="mt-2">
+                   <div>
+-                    <form class="space-y-8 divide-y divide-gray-200">
++                    <div class="space-y-8 divide-y divide-gray-200">
+                       <div class="space-y-8 divide-y divide-gray-200">
+                         <div class="w-full">
+                           <label
+@@ -99,7 +99,7 @@
+                           </div>
+                         </div>
+                       </div>
+-                    </form>
++                    </div>
+                   </div>
+                 </div>
+               </div>
+Index: frontend/miwo-frontend/src/components/Person/PersonSelectList.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/miwo-frontend/src/components/Person/PersonSelectList.vue b/frontend/miwo-frontend/src/components/Person/PersonSelectList.vue
+--- a/frontend/miwo-frontend/src/components/Person/PersonSelectList.vue	(revision 3a99c2f1e26632f2513657f08ddf23aac9096fed)
++++ b/frontend/miwo-frontend/src/components/Person/PersonSelectList.vue	(date 1626427072029)
+@@ -1,6 +1,6 @@
+ <template>
+   <div class="px-6 pt-6 pb-4">
+-    <form class="mt-6 flex space-x-4" action="#">
++    <form class="mt-6 flex space-x-4" @submit.prevent='updateList'>
+       <div class="flex-1 min-w-0">
+         <label for="search" class="sr-only">Search</label>
+         <div class="relative rounded-md shadow-sm">
+Index: frontend/miwo-frontend/tailwind.config.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/miwo-frontend/tailwind.config.js b/frontend/miwo-frontend/tailwind.config.js
+--- a/frontend/miwo-frontend/tailwind.config.js	(revision 3a99c2f1e26632f2513657f08ddf23aac9096fed)
++++ b/frontend/miwo-frontend/tailwind.config.js	(date 1626425453259)
+@@ -1,5 +1,9 @@
+ module.exports = {
+-  purge: [],
++  purge: [
++    './src/**/*.html',
++    './src/**/*.vue',
++    './src/**/*.jsx',
++  ],
+   darkMode: false, // or 'media' or 'class'
+   theme: {
+     extend: {},
+Index: frontend/miwo-frontend/src/views/Apartments.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/miwo-frontend/src/views/Apartments.vue b/frontend/miwo-frontend/src/views/Apartments.vue
+--- a/frontend/miwo-frontend/src/views/Apartments.vue	(revision 3a99c2f1e26632f2513657f08ddf23aac9096fed)
++++ b/frontend/miwo-frontend/src/views/Apartments.vue	(date 1626428327767)
+@@ -12,7 +12,7 @@
+           :class="selectedApartment !== undefined ? 'xs:hidden' : ''"
+         >
+           <div class="px-6 pt-6 pb-4">
+-            <form class="flex space-x-4" action="#">
++            <div class="flex space-x-4">
+               <div class="flex-1 min-w-0">
+                 <label for="search" class="sr-only">Suche</label>
+                 <div class="relative rounded-md shadow-sm">
+@@ -91,7 +91,7 @@
+                 ref="filterdialog"
+                 @filter="filterPotentialTenant"
+               ></FilterApartmentDialog>
+-            </form>
++            </div>
+           </div>
+           <!-- Directory list -->
+           <nav class="flex-1 min-h-0 overflow-y-auto" aria-label="Directory">
+@@ -231,6 +231,7 @@
+     data(): {
+       apartments: Array<Apartment>
+       filteredApartments: Array<Apartment>
++      potentialTenantApartments: Array<Apartment>
+       selectedApartment: Apartment | undefined
+       sidebarOpen: boolean
+       searchString: string
+@@ -239,6 +240,7 @@
+       return {
+         apartments: [],
+         filteredApartments: [],
++        potentialTenantApartments: [],
+         selectedApartment: undefined,
+         sidebarOpen: false,
+         searchString: '',
+@@ -250,6 +252,7 @@
+       if (!result.isError()) {
+         this.apartments = result.data
+         this.filteredApartments = result.data
++        this.potentialTenantApartments = result.data
+       } else {
+         this.notify('error', 'Fehler beim Abrufen der Wohnungen', result.error)
+       }
+@@ -327,7 +330,7 @@
+         this.apartments = this.apartments.filter((a) => a.id !== apartmentId)
+       },
+       search() {
+-        this.filteredApartments = this.filteredApartments.filter((a) => {
++        this.filteredApartments = this.potentialTenantApartments.filter((a) => {
+           return (
+             a.street.includes(this.searchString) ||
+             a.street_number.includes(this.searchString) ||
+@@ -338,12 +341,14 @@
+       },
+       filterPotentialTenant(potentialTenantId) {
+         if (potentialTenantId === 0) {
++          this.potentialTenantApartments = this.apartments
+           this.filteredApartments = this.apartments
+           this.searchString = ''
+           this.potentialTenantFilter = false
+         } else {
+           const result = filterForPotentialTenant(potentialTenantId)
+           if (!result.isError()) {
++            this.potentialTenantApartments = result.data
+             this.filteredApartments = result.data
+             this.searchString = ''
+             this.potentialTenantFilter = true
+Index: frontend/miwo-frontend/src/views/Persons.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/miwo-frontend/src/views/Persons.vue b/frontend/miwo-frontend/src/views/Persons.vue
+--- a/frontend/miwo-frontend/src/views/Persons.vue	(revision 3a99c2f1e26632f2513657f08ddf23aac9096fed)
++++ b/frontend/miwo-frontend/src/views/Persons.vue	(date 1626428121007)
+@@ -12,7 +12,7 @@
+           :class="selectedPerson !== undefined ? 'xs:hidden' : ''"
+         >
+           <div class="px-6 pt-6 pb-4">
+-            <form class="flex space-x-4" action="#">
++            <div class="flex space-x-4">
+               <div class="flex-1 min-w-0">
+                 <label for="search" class="sr-only">Suche</label>
+                 <div class="relative rounded-md shadow-sm">
+@@ -51,7 +51,7 @@
+                   />
+                 </div>
+               </div>
+-            </form>
++            </div>
+           </div>
+           <!-- Directory list -->
+           <nav class="flex-1 min-h-0 overflow-y-auto" aria-label="Directory">
